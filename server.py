@@ -1,5 +1,7 @@
-import traceback, os
+import traceback, os, sys
 import socket, psutil
+import json
+from dateutil import parser
 
 import console, server_addr_conf
 
@@ -32,9 +34,34 @@ def Part1() -> tuple:
         console.print('请设置好服务器地址后重新启动服务器')
         exit()
 
+def load_server_conf() -> dict:
+    if getattr(sys, 'frozen', False):
+        app_dir = os.path.dirname(sys.executable)
+    else:
+        app_dir = os.path.dirname(__file__)
+    file_path = os.path.join(app_dir, 'server.conf.json')
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    data['start_time'] = parser.isoparse(data['start_time'])
+    data['end_time'] = parser.isoparse(data['end_time'])
+
+    return data
+
 def main():
     try:
         server_addr = Part1()
+        console.print(f'服务器将监听: {server_addr[0]}:{server_addr[1]}\n', 'green')
+        try:
+            server_conf = load_server_conf()
+            print(server_conf)
+            print(server_conf['root_path'])
+            print(server_conf['regex'])
+        except Exception as e:
+            console.print(traceback.format_exc())
+            console.print('加载服务器配置文件失败，即将进入系统校验模式\n')
+            console.wait_y()
+            quit()
     except Exception as e:
         console.print(traceback.format_exc())
         console.print("程序出现未知错误，请联系考点负责人\n", 'red')
