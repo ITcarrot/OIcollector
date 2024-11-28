@@ -19,13 +19,13 @@ def press_key_y(*args):
 
 window.bind("<KeyPress-y>", press_key_y)
 
-def start(title, main_func):
+def start(title: str, main_func: callable):
     window.title(title)
     main_thread = threading.Thread(target=main_func, daemon=True)
     main_thread.start()
     window.mainloop()
 
-def print(text, color = ''):
+def print(text: str, color: str = ''):
     global text_widget
     text_widget.config(state=tk.NORMAL)
     text_widget.insert(tk.END, text, color)
