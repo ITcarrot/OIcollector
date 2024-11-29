@@ -1,5 +1,6 @@
 import traceback, os, sys, time
 from datetime import datetime
+import psutil
 
 import console, utils
 import server_addr_conf
@@ -63,6 +64,27 @@ def main():
             sys.exit()
         else:
             console.print("文件md5没有变化\n", 'green')
+        # Step 9
+        console.print("即将进行电脑格式化，")
+        console.print("将会删除电脑上的所有数据！\n", 'red')
+        console.wait_y()
+        partitions = psutil.disk_partitions()
+        to_be_formatted = []
+        for partition in partitions:
+            partition_path = partition.mountpoint
+            if len(partition_path) == 3 and partition_path[0] != 'C' and partition_path[1:] == ':\\':
+                to_be_formatted.append(partition_path[0:2])
+        console.print(f"即将格式化这些分区 {to_be_formatted}，")
+        console.print("分区内数据都会不可逆地删除！\n", 'red')
+        console.wait_y()
+        # Step 10
+        for disk in to_be_formatted:
+            ret = os.system(f'format {disk} /q /y')
+            if ret == 0:
+                console.print(f'{disk} 格式化完成\n', 'green')
+            else:
+                console.print(f'{disk} 格式化失败\n', 'red')
+        console.print('格式化结束，请自行检查格式化效果\n')
 
     except Exception as e:
         console.print(traceback.format_exc())
