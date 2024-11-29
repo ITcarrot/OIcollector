@@ -1,13 +1,9 @@
-import os, sys
+import os
 import socket
 
-import console
+import console, utils
 
-if getattr(sys, 'frozen', False):
-    app_dir = os.path.dirname(sys.executable)
-else:
-    app_dir = os.path.dirname(__file__)
-file_dir = os.path.join(app_dir, 'server_addr.txt')
+file_dir = os.path.join(utils.app_dir, 'server_addr.txt')
 
 def read() -> tuple:
     console.print('正在读取服务器地址文件: ' + file_dir + '\n')
