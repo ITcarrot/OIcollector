@@ -6,7 +6,7 @@ from dateutil import parser
 import multiprocessing
 
 import console, utils
-import server_addr_conf
+import server_addr_conf, collector_conf
 import communicate
 
 tmp_dir = os.path.join(utils.app_dir, 'tmp')
@@ -86,7 +86,6 @@ def Part2_handle_client(client_socket: socket.socket, client_id: int):
         os.rmdir(os.path.join(tmp_dir, f'GD-{client_id}'))
 
 def Part2(server_addr: tuple):
-    console.print('\n加载服务器配置文件失败，即将进入系统校验模式\n')
     console.print('即将核对系统时间，请提前打开手机时钟\n')
     console.wait_y()
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -107,6 +106,13 @@ def Part2(server_addr: tuple):
         process = multiprocessing.Process(target=Part2_handle_client, args=(client_socket, client_id))
         process.start()
 
+def Part3(server_addr: tuple, server_conf: dict) -> list:
+    # Step 2
+    console.print(f"比赛名称：{server_conf['name']}\n")
+    collector_conf.generate(server_addr, server_conf)
+    # Step 3
+    
+
 def main():
     try:
         os.makedirs(tmp_dir, exist_ok=True)
@@ -115,13 +121,13 @@ def main():
         console.print(f'服务器将监听: {server_addr[0]}:{server_addr[1]}\n', 'green')
         try:
             server_conf = load_server_conf()
-            print(server_conf)
-            print(server_conf['root_path'])
-            print(server_conf['regex'])
         except Exception as e:
             console.print(traceback.format_exc())
+            console.print('\n加载服务器配置文件失败，即将进入系统校验模式\n')
             Part2(server_addr)
             sys.exit()
+        namelist = Part3(server_addr, server_conf)
+        
     except Exception as e:
         console.print(traceback.format_exc())
         console.print("程序出现未知错误，请联系考点负责人\n", 'red')

@@ -1,0 +1,12 @@
+{
+    "name": "CSP-S",
+    "problem_archive": "^.*\\.zip$",
+    "root_path": "D:\\",
+    "regex": "^GD-S\\d{5}$",
+    "problem": ["arena", "color", "detect", "duel"],
+    "suffix": ["c", "cpp", "pas"],
+    "use_subdirectory": true,
+    "start_time": "2024-10-26T14:30:00+08:00",
+    "end_time": "2024-10-26T18:30:00+08:00",
+    "size_limit_kb": 100
+}
