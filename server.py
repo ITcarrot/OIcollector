@@ -2,7 +2,6 @@ import traceback, os, sys, time
 from datetime import datetime
 import socket, psutil
 import json, re
-from dateutil import parser
 import multiprocessing
 import zipfile
 
@@ -46,8 +45,8 @@ def load_server_conf() -> dict:
     
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    data['start_time'] = parser.isoparse(data['start_time'])
-    data['end_time'] = parser.isoparse(data['end_time'])
+    data['start_time'] = datetime.strptime(data['start_time'], "%Y-%m-%d %H:%M:%S")
+    data['end_time'] = datetime.strptime(data['end_time'], "%Y-%m-%d %H:%M:%S")
 
     return data
 
@@ -152,6 +151,33 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
         console.print(f'题目配置不一致，请和考点负责人确认\n', 'yellow')
         console.wait_y()
 
+def Part4(server_addr: tuple, server_conf: dict):
+    console.print('\n即将进入赛前学生机文件检查模式\n')
+    console.wait_y()
+    console.clear()
+    # calc md5
+    provided_file_dir = os.path.join(utils.app_dir, f"{server_conf['name']}下发文件")
+    provided_files = os.listdir(provided_file_dir)
+    for i in range(len(provided_files)):
+        file_path = os.path.join(provided_file_dir, provided_files[i])
+        file_md5 = utils.get_file_md5(file_path)
+        provided_files[i] = (provided_files[i], file_md5)
+    provided_files = '\n'.join(map(lambda x: f'{x[0]} {x[1]}', provided_files))
+    assert len(provided_files) < 1000
+    console.print('学生机下发文件清单：\n')
+    console.print(provided_files + '\n')
+    # server
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(server_addr)
+    server_socket.listen()
+    console.print(f'服务器已经运行在 {server_addr[0]}:{server_addr[1]}\n')
+    while True:
+        client_socket, client_address = server_socket.accept()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        client_socket.send(f'{current_time}\n{provided_files}'.encode())
+        client_socket.close()
+        console.print(f"{client_address} 于 {current_time} 接入\n")
+
 def main():
     try:
         os.makedirs(tmp_dir, exist_ok=True)
@@ -166,7 +192,14 @@ def main():
             Part2(server_addr)
             sys.exit()
         namelist = Part3(server_addr, server_conf)
-        
+        if datetime.now() < server_conf['start_time']:
+            Part4(server_addr, server_conf)
+        elif datetime.now() > server_conf['end_time']:
+            pass
+        else:
+            console.print('比赛期间开服务器干什么>_<\n', 'red')
+            sys.exit()
+
     except Exception as e:
         console.print(traceback.format_exc())
         console.print("程序出现未知错误，请联系考点负责人\n", 'red')
