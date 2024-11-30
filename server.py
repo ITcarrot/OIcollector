@@ -1,7 +1,7 @@
 import traceback, os, sys, time
 from datetime import datetime
 import socket, psutil
-import json
+import json, re
 from dateutil import parser
 import multiprocessing
 
@@ -111,7 +111,24 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
     console.print(f"比赛名称：{server_conf['name']}\n")
     collector_conf.generate(server_addr, server_conf)
     # Step 3
+    namelist_file = [f for f in os.listdir(utils.app_dir) if re.match(r'^namelist.*\.txt$', f)]
+    console.print(f'找到选手名单文件：{namelist_file}\n')
+    if len(namelist_file) != 1:
+        console.print(f'没有发现唯一的选手名单文件！\n', 'red')
+        sys.exit()
+    namelist_path = os.path.join(utils.app_dir, namelist_file[0])
     
+    contestant_count = 0
+    with open(namelist_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue  # 忽略空行
+            if not re.match(server_conf['regex'], line):
+                console.print(f'选手 {line} 不符合设定的考号格式，请联系考点负责人\n', 'red')
+                sys.exit()
+            contestant_count += 1
+    console.print(f'本考场应到 {contestant_count} 人，请核对\n')
 
 def main():
     try:
