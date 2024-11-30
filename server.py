@@ -4,6 +4,7 @@ import socket, psutil
 import json, re
 from dateutil import parser
 import multiprocessing
+import zipfile
 
 import console, utils
 import server_addr_conf, collector_conf
@@ -129,6 +130,27 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
                 sys.exit()
             contestant_count += 1
     console.print(f'本考场应到 {contestant_count} 人，请核对\n')
+    # Step 4
+    provided_file_dir = os.path.join(utils.app_dir, f"{server_conf['name']}下发文件")
+    problem_file = [f for f in os.listdir(provided_file_dir) if re.match(server_conf['problem_archive'], f)]
+    console.print(f'找到题目压缩包：{problem_file}\n')
+    if len(problem_file) != 1:
+        console.print(f'没有发现唯一的题目压缩包！\n', 'red')
+        sys.exit()
+    problem_path = os.path.join(provided_file_dir, problem_file[0])
+
+    with zipfile.ZipFile(problem_path, 'r') as zip_file:
+        file_names = zip_file.namelist()
+        problem_found = set()
+        for file_name in file_names:
+            directory = os.path.basename(os.path.dirname(file_name))
+            if file_name[-3:] == '.in':
+                problem_found.add(directory)
+    console.print(f"设置了要收集的题目：{server_conf['problem']}\n")
+    console.print(f"压缩包中发现的题目：{problem_found}\n")
+    if(set(server_conf['problem']) != problem_found):
+        console.print(f'题目配置不一致，请和考点负责人确认\n', 'yellow')
+        console.wait_y()
 
 def main():
     try:
