@@ -13,7 +13,7 @@ def calc_md5(data: dict) -> str:
 def generate(server_addr: tuple, server_conf: dict):
     playload = {key: server_conf[key] for key in ['root_path', 'regex', 'problem', 'suffix', 'use_subdirectory', 'size_limit_kb']}
     playload['start_time'] = server_conf['start_time'].strftime('%Y-%m-%d %H:%M:%S%z')
-    playload['end_time'] = server_conf['start_time'].strftime('%Y-%m-%d %H:%M:%S%z')
+    playload['end_time'] = server_conf['end_time'].strftime('%Y-%m-%d %H:%M:%S%z')
     playload['ip'], playload['port'] = server_addr
     conf_new = json.dumps({'content': playload, 'checksum': calc_md5(playload)}, sort_keys=True, indent=4)
     

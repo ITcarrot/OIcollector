@@ -11,9 +11,13 @@ def get_file_mtime(file_path) -> str:
     mtime = os.path.getmtime(file_path)
     return datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
 
-def get_file_md5(file_path):
-    md5_hash = hashlib.md5()
-    with open(file_path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            md5_hash.update(chunk)
-    return md5_hash.hexdigest()
+def get_file_md5(file_path) -> str:
+    try:
+        md5_hash = hashlib.md5()
+        with open(file_path, 'rb') as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                md5_hash.update(chunk)
+        ret = md5_hash.hexdigest()
+    except Exception as e:
+        ret = str(e)
+    return ret
