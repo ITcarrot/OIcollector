@@ -4,7 +4,7 @@ import threading
 window = tk.Tk()
 window.geometry('800x600')
 
-text_widget = tk.Text(window, bg="black", fg="white", wrap="word", font=('', 15))
+text_widget = tk.Text(window, bg="black", fg="white", wrap="word", font=('', 15), spacing1=5)
 text_widget.pack(fill=tk.BOTH, expand=True)
 text_widget.config(state=tk.DISABLED)
 
