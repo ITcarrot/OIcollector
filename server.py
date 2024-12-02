@@ -2,7 +2,7 @@ import traceback, os, sys, time
 from datetime import datetime
 import socket, psutil
 import json, re
-import multiprocessing
+import multiprocessing, threading
 import zipfile
 
 import console, utils
@@ -118,7 +118,7 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
         sys.exit()
     namelist_path = os.path.join(utils.app_dir, namelist_file[0])
     
-    contestant_count = 0
+    namelist = []
     with open(namelist_path, 'r') as file:
         for line in file:
             line = line.strip()
@@ -127,8 +127,8 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
             if not re.match(server_conf['regex'], line):
                 console.print(f'选手 {line} 不符合设定的考号格式，请联系考点负责人\n', 'red')
                 sys.exit()
-            contestant_count += 1
-    console.print(f'本考场应到 {contestant_count} 人，请核对\n')
+            namelist.append(line)
+    console.print(f'本考场应到 {len(namelist)} 人，请核对\n')
     # Step 4
     provided_file_dir = os.path.join(utils.app_dir, f"{server_conf['name']}下发文件")
     problem_file = [f for f in os.listdir(provided_file_dir) if re.match(server_conf['problem_archive'], f)]
@@ -150,6 +150,8 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
     if(set(server_conf['problem']) != problem_found):
         console.print(f'题目配置不一致，请和考点负责人确认\n', 'yellow')
         console.wait_y()
+
+    return namelist
 
 def Part4(server_addr: tuple, server_conf: dict):
     console.print('\n即将进入赛前学生机文件检查模式\n')
@@ -178,6 +180,65 @@ def Part4(server_addr: tuple, server_conf: dict):
         client_socket.close()
         console.print(f"{client_address} 于 {current_time} 接入\n")
 
+def Part5_screen(server_addr: tuple, src_dir: str, namelist: list):
+    checksum_dir = os.path.join(src_dir, 'checksum')
+    while True:
+        console.clear()
+        console.print(f'代码收集服务器已经运行在 {server_addr[0]}:{server_addr[1]}\n')
+        console.print('绿色：已收集 ', 'green')
+        console.print('黄色：正在收集 ', 'yellow')
+        console.print('白色：未收集 ')
+        console.print('红色：存在问题\n', 'red')
+        
+        src_list = os.listdir(src_dir)
+        checksum_list = os.listdir(checksum_dir)
+        for i in range(len(namelist)):
+            if i % 5 == 0:
+                console.print('\n')
+            user_id = namelist[i]
+            checksum_file = os.path.join(checksum_dir, f'{user_id}.txt')
+            try:
+                if f'{user_id}.txt' in checksum_list:
+                    if os.path.getsize(checksum_file) > 0:
+                        console.print(user_id, 'green' if user_id in src_list else 'red')
+                    else:
+                        console.print(user_id, 'yellow')
+                else:
+                    console.print(user_id, 'red' if user_id in src_list else '')
+            except:
+                console.print(user_id, 'red')
+            finally:
+                console.print(' ' * 4)
+        
+        for dir in src_list:
+            try:
+                assert os.path.isdir(os.path.join(src_dir, dir))
+                assert dir == 'checksum' or (dir in namelist)
+            except:
+                console.print(f'\n{src_dir} 下有多余文件 {dir}', 'red')
+        for file in checksum_list:
+            try:
+                assert os.path.isfile(os.path.join(checksum_dir, file))
+                assert file[:-4] in namelist
+                assert file[-4:] == '.txt'
+            except:
+                console.print(f'\n{checksum_dir} 下有多余文件 {file}', 'red')
+        time.sleep(3)
+
+def Part5(server_addr: tuple, server_conf: dict, namelist: list):
+    console.print('\n即将进入赛后收代码模式\n')
+    console.wait_y()
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(server_addr)
+    server_socket.listen()
+
+    src_dir = os.path.join(utils.app_dir, server_conf['name'])
+    checksum_dir = os.path.join(src_dir, 'checksum')
+    os.makedirs(src_dir, exist_ok=True)
+    os.makedirs(checksum_dir, exist_ok=True)
+    screen_thread = threading.Thread(target=Part5_screen, args=(server_addr, src_dir, namelist))
+    screen_thread.start()
+
 def main():
     try:
         os.makedirs(tmp_dir, exist_ok=True)
@@ -195,7 +256,7 @@ def main():
         if datetime.now() < server_conf['start_time']:
             Part4(server_addr, server_conf)
         elif datetime.now() > server_conf['end_time']:
-            pass
+            Part5(server_addr, server_conf, namelist)
         else:
             console.print('比赛期间开服务器干什么>_<\n', 'red')
             sys.exit()
