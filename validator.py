@@ -1,10 +1,14 @@
 import traceback, os, sys, time
 from datetime import datetime
 import psutil
+import random, string
 
 import console, utils
 import server_addr_conf
 import communicate
+
+TEST_FILE_SIZE_KB = 500
+RANDOM_CHARSET = string.ascii_letters + string.digits + string.punctuation + " \n"
 
 def main():
     try:
@@ -29,7 +33,8 @@ def main():
         os.makedirs(test_dir, exist_ok=True)
         test_file = os.path.join(test_dir, 'test.cpp')
         with open(test_file, 'w') as f:
-            f.write(f"没有彩蛋")
+            for i in range(TEST_FILE_SIZE_KB):
+                f.write(''.join(random.choice(RANDOM_CHARSET) for _ in range(1024)))
         # Step 5
         file_mtime = utils.get_file_mtime(test_file)
         file_md5 = utils.get_file_md5(test_file)
