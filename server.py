@@ -1,4 +1,4 @@
-import traceback, os, sys, time
+import traceback, os, sys, time, shutil
 from datetime import datetime
 import socket, psutil
 import json, re
@@ -180,9 +180,11 @@ def Part4(server_addr: tuple, server_conf: dict):
         client_socket.close()
         console.print(f"{client_address} 于 {current_time} 接入\n")
 
+screen_thread_alive = threading.Event()
 def Part5_screen(server_addr: tuple, src_dir: str, namelist: list):
+    global screen_thread_alive
     checksum_dir = os.path.join(src_dir, 'checksum')
-    while True:
+    while screen_thread_alive.is_set():
         console.clear()
         console.print(f'代码收集服务器已经运行在 {server_addr[0]}:{server_addr[1]}\n')
         console.print('绿色：已收集 ', 'green')
@@ -225,6 +227,52 @@ def Part5_screen(server_addr: tuple, src_dir: str, namelist: list):
                 console.print(f'\n{checksum_dir} 下有多余文件 {file}', 'red')
         time.sleep(3)
 
+def Part5_handle_client(client_socket: socket.socket, header: list, src_dir: str):
+    checksum_dir = os.path.join(src_dir, 'checksum')
+    tmp_dir = os.path.join(utils.app_dir, 'tmp')
+    user_id = header[0]
+    user_dir = os.path.join(src_dir, user_id)
+    user_checksum = os.path.join(checksum_dir, f'{user_id}.txt')
+    tarfile_path = os.path.join(tmp_dir, f'{user_id}.tar.gz')
+    
+    try:
+        tarfile_size = int(header[1])
+        submit_files_md5 = header[2:]
+        submit_files = list(map(lambda x: x.split(' ')[0], submit_files_md5))
+        submit_md5 = list(map(lambda x: x.split(' ')[1], submit_files_md5))
+        client_socket.send('yes'.encode())
+        with open(tarfile_path, "wb") as f:
+            received_data = 0
+            while received_data < tarfile_size:
+                data = client_socket.recv(1048576)
+                f.write(data)
+                received_data += len(data)
+        communicate.extract_file(tarfile_path, src_dir)
+        
+        try:
+            for i in range(len(submit_files)):
+                if utils.get_file_md5(os.path.join(user_dir, submit_files[i])) != submit_md5[i]:
+                    raise ValueError(f"{submit_files[i]} 校验不通过")
+            for dirpath, dirnames, filenames in os.walk(user_dir):
+                for filename in filenames:
+                    full_path = os.path.join(dirpath, filename)
+                    relative_path = os.path.relpath(full_path, user_dir)
+                    if relative_path not in submit_files:
+                        raise ValueError(f"存在多余文件 {relative_path}")
+        except ValueError as e:
+            client_socket.send(str(e).encode())
+            raise
+        with open(user_checksum, 'w') as f:
+            f.write('\n'.join(submit_files_md5))
+            f.write(f'\n{user_id}.txt {utils.get_str_list_md5(submit_files_md5)}')
+        with open(user_checksum, 'r') as f:
+            client_socket.send(''.join(f.readlines()).encode())
+    except:
+        shutil.rmtree(user_dir, True)
+        os.remove(user_checksum)
+    finally:
+        client_socket.close()
+
 def Part5(server_addr: tuple, server_conf: dict, namelist: list):
     console.print('\n即将进入赛后收代码模式\n')
     console.wait_y()
@@ -236,8 +284,38 @@ def Part5(server_addr: tuple, server_conf: dict, namelist: list):
     checksum_dir = os.path.join(src_dir, 'checksum')
     os.makedirs(src_dir, exist_ok=True)
     os.makedirs(checksum_dir, exist_ok=True)
-    screen_thread = threading.Thread(target=Part5_screen, args=(server_addr, src_dir, namelist))
+    screen_thread = threading.Thread(target=Part5_screen, args=(server_addr, src_dir, namelist), daemon=True)
+    global screen_thread_alive
+    screen_thread_alive.set()
     screen_thread.start()
+    
+    try:
+        while True:
+            client_socket, client_address = server_socket.accept()
+            header = client_socket.recv(1024).decode().split('\n')
+            user_id = header[0]
+            user_src = os.path.join(src_dir, user_id)
+            user_checksum = os.path.join(checksum_dir, f'{user_id}.txt')
+            
+            response = ''
+            if user_id not in namelist:
+                response += f'{user_id} 不属于这个考场\n'
+            if os.path.exists(user_src):
+                response += f'考号重复，请核对选手考号或在服务器删除已有代码 {user_src}\n'
+            if os.path.exists(user_checksum):
+                response += f'考号重复，请核对选手考号或在服务器删除已有校验码 {user_checksum}\n'
+            if response != '':
+                client_socket.send(response.encode())
+                client_socket.close()
+                continue
+
+            with open(user_checksum, 'w') as f:
+                pass
+            process = multiprocessing.Process(target=Part5_handle_client, args=(client_socket, header, src_dir))
+            process.start()
+    finally:
+        screen_thread_alive.clear()
+        screen_thread.join()
 
 def main():
     try:

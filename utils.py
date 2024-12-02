@@ -21,3 +21,6 @@ def get_file_md5(file_path) -> str:
     except Exception as e:
         ret = str(e)
     return ret
+
+def get_str_list_md5(str_list: list) -> str:
+    return hashlib.md5('\n'.join(str_list).encode()).hexdigest()

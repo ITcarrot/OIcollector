@@ -20,10 +20,10 @@ def connect_to_server(server_addr: tuple) -> socket.socket:
             console.print(f"{e} 重试中...\n")
             time.sleep(RETRY_DELAY)
 
-def compress_file(tarfile_path: str, files: list):
+def compress_file(tarfile_path: str, files: list, start_path: str = utils.app_dir):
     with tarfile.open(tarfile_path, 'w:gz') as tarf:
         for file in files:
-            tarf.add(file, os.path.relpath(file, utils.app_dir))
+            tarf.add(file, os.path.relpath(file, start_path))
 
 def extract_file(tarfile_path: str, dest_path: str):
     with tarfile.open(tarfile_path, 'r') as tarf:

@@ -72,8 +72,9 @@ def Part3(collector_conf: dict) -> tuple:
     if len(dirs) > 1:
         console.print(f'找到多个选手目录 {dirs}，请删除或重命名多余目录\n', 'red')
         sys.exit()
-    user_dir = os.path.join(collector_conf['root_path'], dirs[0])
-    console.print(f"找到选手目录： {dirs[0]}, 请确认是否与准考证号一致.\n", 'yellow')
+    user_id = dirs[0]
+    user_dir = os.path.join(collector_conf['root_path'], user_id)
+    console.print(f"找到选手目录： {user_id}, 请确认是否与准考证号一致.\n", 'yellow')
     
     submit_files = []
     submit_files_md5 = []
@@ -106,7 +107,38 @@ def Part3(collector_conf: dict) -> tuple:
         
         if not file_found:
             console.print('\t未找到源代码文件\n', 'yellow')
-    return submit_files, submit_files_md5
+    return submit_files, submit_files_md5, user_id
+
+def Part4(collector_conf: dict, submit_files: list, submit_files_md5: list, user_id: str):
+    if len(submit_files) == 0:
+        console.print('没有代码可上传\n', 'red')
+        sys.exit()
+    console.print('开始上传代码\n')
+
+    tarfile_path = os.path.join(collector_conf['root_path'], f'{user_id}.tar.gz')
+    communicate.compress_file(tarfile_path, submit_files, collector_conf['root_path'])
+    tarfile_size = os.path.getsize(tarfile_path)
+    playload = (f'{user_id}\n{tarfile_size}\n' + '\n'.join(submit_files_md5)).encode()
+    assert len(playload) <= 1000
+
+    client_socket = communicate.connect_to_server((collector_conf['ip'], collector_conf['port']))
+    client_socket.send(playload)
+    response = client_socket.recv(1024).decode()
+    if response != 'yes':
+        console.print(response, 'red')
+        client_socket.close()
+        sys.exit()
+    with open(tarfile_path, "rb") as f:
+        client_socket.sendfile(f)
+    server_files_md5 = client_socket.recv(1024).decode().split('\n')
+    client_socket.close()
+
+    submit_files_md5.append(f'{user_id}.txt {utils.get_str_list_md5(submit_files_md5)}')
+    max_len = max(len(submit_files_md5), len(server_files_md5))
+    submit_files_md5 += ['<空行>'] * (max_len - len(submit_files_md5))
+    server_files_md5 += ['<空行>'] * (max_len - len(server_files_md5))
+    for i in range(max_len):
+        console.print(f'本  地 {submit_files_md5[i]}\n服务器 {server_files_md5[i]}\n\n', 'green' if submit_files_md5[i] == server_files_md5[i] else 'red')
 
 def main():
     try:
@@ -114,7 +146,9 @@ def main():
         if datetime.now() < collector_conf['start_time'] - timedelta(minutes=5):
             Part2(collector_conf)
             return
-        submit_files, submit_files_md5 = Part3(collector_conf)
+        submit_files, submit_files_md5, user_id = Part3(collector_conf)
+        if datetime.now() > collector_conf['end_time'] + timedelta(minutes=5):
+            Part4(collector_conf, submit_files, submit_files_md5, user_id)
     except Exception as e:
         console.print(traceback.format_exc())
         console.print("程序出现未知错误，请联系监考员\n", 'red')
