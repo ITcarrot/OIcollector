@@ -66,3 +66,41 @@ conda activate OIcollector
 ./build.ps1
 ```
 生成的可执行文件位于 dist/ 目录下
+
+## Develop Notes
+仓库目录结构
+
+### 公用模块文件
+- collector_conf.py：读写collector配置文件
+- communicate.py：连接服务器，（解）压缩文件
+- console.py：使用tk实现的彩色命令行，不使用系统命令行以避免编码和颜色问题
+- utils.py：获取程序路径，获取文件信息，md5校验
+
+### 程序主体文件
+#### collector.py
+代码收集程序，打包为 collector.exe
+- Part1：读取配置文件
+- Part2：比赛开始前校验系统时间和下发文件
+- Part3：识别选手代码并记录文件信息
+- Part4：比赛结束后提交代码文件
+
+#### server.py
+服务器，打包为 server.exe
+- Part1：读取服务器地址配置 / 自动检测服务器地址
+- Part2, Part2_handle_client：和validator交互
+- Part3：检查比赛配置和下发文件，生成collector的配置文件
+- Part4：向collector发送下发文件信息
+- Part5, Part5_handle_client：回收与校验代码文件
+- Part5_screen：实时更新代码回收情况
+
+#### validator.py
+系统环境检查工具，打包为 validator.exe
+
+### 示例文件
+- namelist1.txt：考生名单示例
+- server.conf.json：比赛配置文件示例
+- server_addr.txt：服务器监听地址示例
+
+### 构建文件
+- build.ps1：构建脚本
+- environment.yml：conda环境记录
