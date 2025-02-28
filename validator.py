@@ -43,7 +43,7 @@ def main():
         communicate.compress_file(tarfile_path, [test_file])
         # Step 6
         tarfile_size = os.path.getsize(tarfile_path)
-        client_socket.send(f"{tarfile_size}\n{file_mtime}".encode())
+        client_socket.sendall(f"{tarfile_size}\n{file_mtime}".encode())
         # Step 7
         with open(tarfile_path, "rb") as f:
             while True:

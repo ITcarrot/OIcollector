@@ -122,7 +122,7 @@ def Part4(collector_conf: dict, submit_files: list, submit_files_md5: list, user
     assert len(playload) <= 1000
 
     client_socket = communicate.connect_to_server((collector_conf['ip'], collector_conf['port']))
-    client_socket.send(playload)
+    client_socket.sendall(playload)
     response = client_socket.recv(1024).decode()
     if response != 'yes':
         console.print(response, 'red')

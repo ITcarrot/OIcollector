@@ -54,7 +54,7 @@ def Part2_handle_client(client_socket: socket.socket, client_id: int):
     try:
         # Step 1
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        client_socket.send(f"{client_id}\n{current_time}".encode())
+        client_socket.sendall(f"{client_id}\n{current_time}".encode())
         # Step 2
         file_size, file_mtime = client_socket.recv(1024).decode().split('\n')
         file_size = int(file_size)
@@ -74,7 +74,7 @@ def Part2_handle_client(client_socket: socket.socket, client_id: int):
         recv_file_path = os.path.join(tmp_dir, f'GD-{client_id}', 'test', 'test.cpp')
         recv_file_mtime = utils.get_file_mtime(recv_file_path)
         recv_file_md5 = utils.get_file_md5(recv_file_path)
-        client_socket.send(f'{recv_file_mtime}\n{recv_file_md5}'.encode())
+        client_socket.sendall(f'{recv_file_mtime}\n{recv_file_md5}'.encode())
 
     finally:
         # Step 6
@@ -176,7 +176,7 @@ def Part4(server_addr: tuple, server_conf: dict):
     while True:
         client_socket, client_address = server_socket.accept()
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        client_socket.send(f'{current_time}\n{provided_files}'.encode())
+        client_socket.sendall(f'{current_time}\n{provided_files}'.encode())
         client_socket.close()
         console.print(f"{client_address} 于 {current_time} 接入\n")
 
@@ -240,7 +240,7 @@ def Part5_handle_client(client_socket: socket.socket, header: list, src_dir: str
         submit_files_md5 = header[2:]
         submit_files = list(map(lambda x: x.split(' ')[0], submit_files_md5))
         submit_md5 = list(map(lambda x: x.split(' ')[1], submit_files_md5))
-        client_socket.send('yes'.encode())
+        client_socket.sendall('yes'.encode())
         with open(tarfile_path, "wb") as f:
             received_data = 0
             while received_data < tarfile_size:
@@ -260,13 +260,13 @@ def Part5_handle_client(client_socket: socket.socket, header: list, src_dir: str
                     if relative_path not in submit_files:
                         raise ValueError(f"存在多余文件 {relative_path}")
         except ValueError as e:
-            client_socket.send(str(e).encode())
+            client_socket.sendall(str(e).encode())
             raise
         with open(user_checksum, 'w') as f:
             f.write('\n'.join(submit_files_md5))
             f.write(f'\n{user_id}.txt {utils.get_str_list_md5(submit_files_md5)}')
         with open(user_checksum, 'r') as f:
-            client_socket.send(''.join(f.readlines()).encode())
+            client_socket.sendall(''.join(f.readlines()).encode())
     except:
         shutil.rmtree(user_dir, True)
         os.remove(user_checksum)
@@ -305,7 +305,7 @@ def Part5(server_addr: tuple, server_conf: dict, namelist: list):
             if os.path.exists(user_checksum):
                 response += f'考号重复，请核对选手考号或在服务器删除已有校验码 {user_checksum}\n'
             if response != '':
-                client_socket.send(response.encode())
+                client_socket.sendall(response.encode())
                 client_socket.close()
                 continue
 
