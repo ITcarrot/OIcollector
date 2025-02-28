@@ -325,9 +325,8 @@ def main():
         console.print(f'服务器将监听: {server_addr[0]}:{server_addr[1]}\n', 'green')
         try:
             server_conf = load_server_conf()
-        except Exception as e:
-            console.print(traceback.format_exc())
-            console.print('\n加载服务器配置文件失败，即将进入系统校验模式\n')
+        except FileNotFoundError as e:
+            console.print('没有比赛配置文件，即将进入系统校验模式\n')
             Part2(server_addr)
             sys.exit()
         namelist = Part3(server_addr, server_conf)
