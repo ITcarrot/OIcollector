@@ -18,6 +18,7 @@ def press_key_y(*args):
     y_pressed.set()
 
 window.bind("<KeyPress-y>", press_key_y)
+window.bind("<KeyPress-Y>", press_key_y)
 
 def start(title: str, main_func: callable):
     window.title(title)
