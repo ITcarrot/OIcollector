@@ -46,7 +46,11 @@ def main():
         client_socket.send(f"{tarfile_size}\n{file_mtime}".encode())
         # Step 7
         with open(tarfile_path, "rb") as f:
-            client_socket.sendfile(f)
+            while True:
+                data = f.read(4096)
+                if not data:
+                    break
+                client_socket.sendall(data)
         # Step 8
         server_file_mtime, server_file_md5 = client_socket.recv(1024).decode().split('\n')
         client_socket.close()

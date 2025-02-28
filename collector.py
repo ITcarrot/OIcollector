@@ -129,7 +129,11 @@ def Part4(collector_conf: dict, submit_files: list, submit_files_md5: list, user
         client_socket.close()
         sys.exit()
     with open(tarfile_path, "rb") as f:
-        client_socket.sendfile(f)
+        while True:
+            data = f.read(4096)
+            if not data:
+                break
+            client_socket.sendall(data)
     server_files_md5 = client_socket.recv(1024).decode().split('\n')
     client_socket.close()
 
