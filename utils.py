@@ -2,6 +2,8 @@ import sys, os
 from datetime import datetime
 import hashlib
 
+ACCEPT_MOD_TIME_DELTA=3
+
 if getattr(sys, 'frozen', False):
     app_dir = os.path.dirname(sys.executable)
 else:

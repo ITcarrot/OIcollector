@@ -68,7 +68,7 @@ def Part2_handle_client(client_socket: socket.socket, client_id: int):
                 received_data += len(data)
         # Step 4
         wait_time = (datetime.strptime(file_mtime, "%Y-%m-%d %H:%M:%S") - datetime.now()).total_seconds()
-        time.sleep(max(0, wait_time) + 2)
+        time.sleep(max(0, wait_time) + 2 + utils.ACCEPT_MOD_TIME_DELTA * 2)
         communicate.extract_file(tar_file_path, tmp_dir)
         # Step 5
         recv_file_path = os.path.join(tmp_dir, f'GD-{client_id}', 'test', 'test.cpp')

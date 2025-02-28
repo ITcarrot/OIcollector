@@ -5,7 +5,7 @@ import tarfile
 import console, utils
 
 TIMEOUT = 60
-RETRY_DELAY = 5
+RETRY_DELAY = 10
 
 def connect_to_server(server_addr: tuple) -> socket.socket:
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -61,7 +61,8 @@ def main():
 
         console.print(f'本机的文件修改时间 {file_mtime}\n')
         console.print(f'服务器文件修改时间 {server_file_mtime}\n')
-        if file_mtime != server_file_mtime:
+        mod_time_diff = abs((datetime.strptime(file_mtime, "%Y-%m-%d %H:%M:%S") - datetime.strptime(server_file_mtime, "%Y-%m-%d %H:%M:%S")).total_seconds())
+        if mod_time_diff > utils.ACCEPT_MOD_TIME_DELTA:
             console.print("文件修改时间发送变化！\n", 'red')
             sys.exit()
         else:
