@@ -16,9 +16,17 @@ y_pressed = threading.Event()
 def press_key_y(*args):
     global y_pressed
     y_pressed.set()
-
 window.bind("<KeyPress-y>", press_key_y)
 window.bind("<KeyPress-Y>", press_key_y)
+
+key_pressed = threading.Event()
+last_pressed_key = ''
+def press_key(event):
+    global key_pressed, last_pressed_key
+    if not key_pressed.is_set():
+        key_pressed.set()
+        last_pressed_key = event.char
+window.bind('<KeyPress>', press_key)
 
 def start(title: str, main_func: callable):
     window.title(title)
@@ -45,3 +53,9 @@ def wait_y():
     print('请按y键继续','green')
     print('或关闭窗口退出\n')
     y_pressed.wait()
+
+def get_next_key():
+    global key_pressed, last_pressed_key
+    key_pressed.clear()
+    key_pressed.wait()
+    return last_pressed_key

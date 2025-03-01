@@ -323,20 +323,25 @@ def main():
 
         server_addr = Part1()
         console.print(f'服务器将监听: {server_addr[0]}:{server_addr[1]}\n', 'green')
-        try:
-            server_conf = load_server_conf()
-        except FileNotFoundError as e:
-            console.print('没有比赛配置文件，即将进入系统校验模式\n')
+
+        console.print('请输入要运行的功能编号：\n')
+        console.print('1. 检查学生机时间、模拟收代码、格式化非系统盘\n')
+        console.print('2. 检查学生机时间、下发文件完整性\n')
+        console.print('3. 收集学生机代码\n')
+        while True:
+            mode = console.get_next_key()
+            if mode in ['1', '2', '3']:
+                break
+
+        if mode == '1':
             Part2(server_addr)
             sys.exit()
+        server_conf = load_server_conf()
         namelist = Part3(server_addr, server_conf)
-        if datetime.now() < server_conf['start_time']:
+        if mode == '2':
             Part4(server_addr, server_conf)
-        elif datetime.now() > server_conf['end_time']:
+        elif mode == '3':
             Part5(server_addr, server_conf, namelist)
-        else:
-            console.print('比赛期间开服务器干什么>_<\n', 'red')
-            sys.exit()
 
     except Exception as e:
         console.print(traceback.format_exc())
