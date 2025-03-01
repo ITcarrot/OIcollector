@@ -4,9 +4,15 @@ import threading
 window = tk.Tk()
 window.geometry('800x600')
 
-text_widget = tk.Text(window, bg="black", fg="white", wrap="word", font=('', 15), spacing1=5)
+scrollbar = tk.Scrollbar(window)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+text_widget = tk.Text(window, bg="black", fg="white",
+                      wrap="word", font=('', 15), spacing1=5,
+                      yscrollcommand=scrollbar.set)
 text_widget.pack(fill=tk.BOTH, expand=True)
 text_widget.config(state=tk.DISABLED)
+scrollbar.config(command=text_widget.yview)
 
 text_widget.tag_configure("red", foreground="red")
 text_widget.tag_configure("yellow", foreground="yellow")
