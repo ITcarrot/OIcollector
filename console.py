@@ -18,12 +18,11 @@ text_widget.tag_configure("red", foreground="red")
 text_widget.tag_configure("yellow", foreground="yellow")
 text_widget.tag_configure("green", foreground="green")
 
-y_pressed = threading.Event()
-def press_key_y(*args):
-    global y_pressed
-    y_pressed.set()
-window.bind("<KeyPress-y>", press_key_y)
-window.bind("<KeyPress-Y>", press_key_y)
+space_pressed = threading.Event()
+def press_key_space(*args):
+    global space_pressed
+    space_pressed.set()
+window.bind("<KeyPress-space>", press_key_space)
 
 key_pressed = threading.Event()
 last_pressed_key = ''
@@ -53,12 +52,12 @@ def clear():
     text_widget.delete(1.0, tk.END)
     text_widget.config(state=tk.DISABLED)
 
-def wait_y():
-    global y_pressed
-    y_pressed.clear()
-    print('请按y键继续','green')
+def wait_space():
+    global space_pressed
+    space_pressed.clear()
+    print('请按空格键继续','green')
     print('或关闭窗口退出\n')
-    y_pressed.wait()
+    space_pressed.wait()
 
 def get_next_key():
     global key_pressed, last_pressed_key

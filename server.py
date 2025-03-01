@@ -87,10 +87,10 @@ def Part2_handle_client(client_socket: socket.socket, client_id: int):
 
 def Part2(server_addr: tuple):
     console.print('即将核对系统时间，请提前打开手机时钟\n')
-    console.wait_y()
+    console.wait_space()
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     console.print(f'系统时间为 {current_time}，请和北京时间核对\n')
-    console.wait_y()
+    console.wait_space()
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(server_addr)
     server_socket.listen()
@@ -149,13 +149,13 @@ def Part3(server_addr: tuple, server_conf: dict) -> list:
     console.print(f"压缩包中发现的题目：{problem_found}\n")
     if(set(server_conf['problem']) != problem_found):
         console.print(f'题目配置不一致，请和考点负责人确认\n', 'yellow')
-        console.wait_y()
+        console.wait_space()
 
     return namelist
 
 def Part4(server_addr: tuple, server_conf: dict):
     console.print('\n即将进入赛前学生机文件检查模式\n')
-    console.wait_y()
+    console.wait_space()
     console.clear()
     # calc md5
     provided_file_dir = os.path.join(utils.app_dir, f"{server_conf['name']}下发文件")
@@ -275,7 +275,7 @@ def Part5_handle_client(client_socket: socket.socket, header: list, src_dir: str
 
 def Part5(server_addr: tuple, server_conf: dict, namelist: list):
     console.print('\n即将进入赛后收代码模式\n')
-    console.wait_y()
+    console.wait_space()
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(server_addr)
     server_socket.listen()

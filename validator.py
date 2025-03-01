@@ -77,7 +77,7 @@ def main():
         # Step 9
         console.print("即将进行电脑格式化，")
         console.print("将会删除电脑上的所有数据！\n", 'red')
-        console.wait_y()
+        console.wait_space()
         partitions = psutil.disk_partitions()
         to_be_formatted = []
         for partition in partitions:
@@ -86,7 +86,7 @@ def main():
                 to_be_formatted.append(partition_path[0:2])
         console.print(f"即将格式化这些分区 {to_be_formatted}，")
         console.print("分区内数据都会不可逆地删除！\n", 'red')
-        console.wait_y()
+        console.wait_space()
         # Step 10
         for disk in to_be_formatted:
             ret = os.system(f'format {disk} /q /y')
